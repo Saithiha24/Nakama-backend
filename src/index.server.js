@@ -5,6 +5,7 @@ const { chats } = require("./data/data");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const authRoutes = require("./routes/auth");
+const chatRoutes = require("./routes/chatRoutes");
 
 // middleware
 app.use(cors());
@@ -29,7 +30,8 @@ app.get("/api/chat:id", (req, res) => {
   res.end(singleChat);
 });
 
-app.use("/api", authRoutes);
+app.use("/api.auth", authRoutes);
+app.use("/api/chat", chatRoutes);
 // PORT
 const port = process.env.PORT;
 app.listen(process.env.PORT, () => console.log(`app is running`));

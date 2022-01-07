@@ -10,7 +10,7 @@ const jwtgenerator = async (id) => {
   return token;
 };
 
-exports.singIn = asyncHandler(async (req, res) => {
+exports.signIn = asyncHandler(async (req, res) => {
   const { email, password, pic } = req.body;
   const userExist = await User.findOne({ email });
   if (userExist)
@@ -54,7 +54,7 @@ exports.allUsers = asyncHandler(async (req, res) => {
           { email: { $regex: req.query.search, $options: "i" } },
         ],
       }
-    : {};
+    : null;
   const users = await User.find(keyword).find({ _id: { $ne: req.user._id } });
   res.send(users);
 });

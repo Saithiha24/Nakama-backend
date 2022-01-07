@@ -1,12 +1,11 @@
 const asyncHandler = require("express-async-handler");
-const jwt = require("jsonwebtoken");
+
 const Chat = require("../model/ChatModel");
 const User = require("../model/UserModel");
 
-exports.accesChat = asyncHandler(async (req, res) => {
+exports.accessChat = asyncHandler(async (req, res) => {
   const { userId } = req.body;
-  if (!userId)
-    return res.status(404).json({ message: "User token is not found" });
+  if (!userId) return res.status(400).json({ message: "User is not found" });
   if (userId) {
     let isChat = await Chat.find({
       isGroupChat: false,
@@ -20,25 +19,43 @@ exports.accesChat = asyncHandler(async (req, res) => {
 
     isChat = await User.populate(isChat, {
       path: "latestMessage.sender",
-      select: "name pic email",
+      select: "name email pic",
     });
+
     if (isChat.length > 0) {
       res.send(isChat[0]);
     } else {
+      let ChatData = {
+        chatName: "sender",
+        isGroupChat: false,
+        users: [req.user._id, userId],
+      };
+
       try {
-        let createChat = Chat.create({
-          chatName: "sender",
-          isGroupChat: "false",
-          users: [req.user._id, userId],
-        });
-        const fullChat = User.findOne({ id: createChat._id }).populate(
-          "name",
-          "password"
+        const createChat = await Chat.create(ChatData);
+        const fullChat = await Chat.findOne({ _id: createChat._id }).populate(
+          "users",
+          "-password"
         );
-        return res.status(201).json({ fullChat });
+        res.status(200).json(fullChat);
       } catch (error) {
-        return res.status(400).json({ message: error });
+        res.status(400);
+        throw new Error(error.message);
       }
     }
+  }
+});
+
+exports.fetchChat = asyncHandler(async (req, res) => {
+  try {
+    Chat.find({ users: { $elemmatch: { $eq: req.user._id } } })
+      .populate("users", "-pw")
+      .populate("latestMessage")
+      .then((result) => {
+        res.status(200).json({ result });
+      });
+  } catch (errror) {
+    res.status(400);
+    throw new Error("Something went wrong");
   }
 });
