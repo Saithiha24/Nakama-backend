@@ -50,7 +50,9 @@ exports.fetchChat = asyncHandler(async (req, res) => {
   try {
     Chat.find({ users: { $elemmatch: { $eq: req.user._id } } })
       .populate("users", "-pw")
+      .populate("GroupAdmin", "-password")
       .populate("latestMessage")
+      .sort({ updateAt: -1 })
       .then((result) => {
         res.status(200).json({ result });
       });
